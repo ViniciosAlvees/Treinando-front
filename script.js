@@ -1,72 +1,14 @@
-const css = `
-body {
-    font-family: Arial, sans-serif;
-    background-color: #ff0000;
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-}
+const formulario = document.getElementById("pedidoForm");
 
-.container {
-    background-color: white;
-    padding: 20px;
-    width: 400px;
-    border-radius: 20px;
-    box-shadow: 0px 0px 10px gray;
-}
+formulario.addEventListener("submit", function(event) {
 
-.logo {
-    width: 160px;
-    display: block;
-    margin: auto;
-}
+    event.preventDefault();
 
-.banner {
-    width: 100%;
-    border-radius: 10px;
-    margin-top: 10px;
-}
+    let nome = document.getElementById("nome").value;
 
-h1 {
-    text-align: center;
-}
+    document.getElementById("mensagem").innerHTML =
 
-label {
-    margin-top: 10px;
-    display: block;
-}
+    "Pedido realizado com sucesso, " + nome + "!";
 
-input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-}
-
-button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 20px;
-    background-color: #ff0000;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #ff0000;
-}
-
-#mensagem {
-    text-align: center;
-    margin-top: 20px;
-    font-weight: bold;
-    color: red;
-}
-`;
-
-const style = document.createElement('style');
-style.textContent = css;
-const styleSheet = document.head.appendChild(style);
-
+});
  
