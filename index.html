@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta
     name="description"
-    content="Formulario de pedidos da Docinhos da Ari."
+    content="Formulário de pedidos da Docinhos da Ari."
   >
   <title>Docinhos da Ari | Pedido</title>
   <link rel="icon" type="image/jpeg" href="assets/docinho-logo.jpg">
@@ -31,7 +31,7 @@
 
         <div class="brand-copy">
           <p class="eyebrow">Docinhos da Ari</p>
-          <h1 id="titulo-pedido">Faca seu pedido</h1>
+          <h1 id="titulo-pedido">Faça seu pedido</h1>
           <p>Preencha os dados abaixo para registrar sua encomenda.</p>
         </div>
       </header>
@@ -140,7 +140,7 @@
           </div>
 
           <div class="field">
-            <label for="numero">Numero da casa</label>
+            <label for="numero">Número da casa</label>
             <input
               type="text"
               id="numero"
@@ -157,7 +157,7 @@
               id="complemento"
               name="complemento"
               autocomplete="address-line3"
-              placeholder="Apartamento, bloco ou referencia"
+              placeholder="Apartamento, bloco ou referência"
             >
           </div>
 
@@ -169,16 +169,17 @@
               required
             >
               <option value="">Selecione um sabor</option>
-              <option value="Brigadeiro">Brigadeiro</option>
-              <option value="Beijinho">Beijinho</option>
-              <option value="Casadinho">Casadinho</option>
-              <option value="Chocolate">Chocolate</option>
-              <option value="Coco">Coco</option>
-              <option value="Morango">Morango</option>
-              <option value="Ninho">Ninho</option>
-              <option value="Ninho com Nutella">Ninho com Nutella</option>
-              <option value="Sortido">Sortido</option>
+              <option value="Brigadeiro">Brigadeiro - R$ 6,00</option>
+              <option value="Beijinho">Beijinho - R$ 6,00</option>
+              <option value="Casadinho">Casadinho - R$ 6,00</option>
+              <option value="Chocolate">Chocolate - R$ 6,00</option>
+              <option value="Coco">Coco - R$ 6,00</option>
+              <option value="Morango">Morango - R$ 6,00</option>
+              <option value="Ninho">Ninho - R$ 6,00</option>
+              <option value="Ninho com Nutella">Ninho com Nutella - R$ 6,00</option>
+              <option value="Sortido">Sortido - R$ 6,00</option>
             </select>
+            <span class="field-help">Todos os sabores custam R$ 6,00 cada.</span>
           </div>
 
           <div class="field">
@@ -199,5 +200,14 @@
       </form>
     </section>
   </main>
+
+  <div class="success-modal" id="sucessoPedido" role="dialog" aria-modal="true" aria-labelledby="sucessoTitulo" hidden>
+    <div class="success-modal__content">
+      <p class="success-modal__eyebrow">Pedido confirmado</p>
+      <h2 id="sucessoTitulo">Parabéns! Seu pedido foi realizado com sucesso.</h2>
+      <p id="sucessoResumo"></p>
+      <button class="success-modal__button" id="fecharSucesso" type="button">Fechar</button>
+    </div>
+  </div>
 </body>
 </html>

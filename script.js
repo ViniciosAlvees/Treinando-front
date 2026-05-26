@@ -7,13 +7,24 @@ const neighborhoodInput = document.querySelector("#bairro");
 const cepStatus = document.querySelector("#cepStatus");
 const phoneInput = document.querySelector("#telefone");
 const submitButton = form.querySelector(".submit-button");
+const successModal = document.querySelector("#sucessoPedido");
+const successSummary = document.querySelector("#sucessoResumo");
+const closeSuccessButton = document.querySelector("#fecharSucesso");
 const images = document.querySelectorAll("img");
 const orderEmail = "vinicios3007@gmail.com";
 const orderEmailEndpoint = `https://formsubmit.co/ajax/${orderEmail}`;
 const submitButtonText = submitButton.textContent;
+const flavorUnitPrice = 6;
+const siteImageUrl = new URL("assets/docinhos-sortidos.jpg", window.location.href).href;
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
 let cepRequestId = 0;
 
 const onlyDigits = (value) => value.replace(/\D/g, "");
+
+const formatCurrency = (value) => currencyFormatter.format(value);
 
 const preventNonDigitTyping = (event) => {
   if (event.inputType !== "insertText" || !event.data) {
@@ -113,10 +124,31 @@ const clearAddress = () => {
   neighborhoodInput.value = "";
 };
 
+const getOrderTotal = (quantity) => quantity * flavorUnitPrice;
+
+const getFlavorPriceLabel = (flavor) => `${flavor} - ${formatCurrency(flavorUnitPrice)}`;
+
+const buildSiteImageHtml = () => (
+  `<img src="${siteImageUrl}" alt="Docinhos da Ari" width="600" style="max-width:100%;height:auto;border-radius:8px;">`
+);
+
+const showSuccessPopup = ({ firstName, quantity, itemLabel, flavor, total }) => {
+  successSummary.textContent = `${firstName}, recebemos seu pedido de ${quantity} ${itemLabel} de ${flavor}. Valor total: ${formatCurrency(total)}.`;
+  successModal.hidden = false;
+  document.body.classList.add("has-open-modal");
+  closeSuccessButton.focus();
+};
+
+const hideSuccessPopup = () => {
+  successModal.hidden = true;
+  document.body.classList.remove("has-open-modal");
+  form.querySelector("#nome").focus();
+};
+
 const fetchAddressByCep = async (cep) => {
   const currentRequestId = ++cepRequestId;
 
-  setCepStatus("Buscando endereco...");
+  setCepStatus("Buscando endereço...");
 
   try {
     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -134,7 +166,7 @@ const fetchAddressByCep = async (cep) => {
     if (address.erro) {
       clearAddress();
       setFieldError(cepInput, true);
-      setCepStatus("CEP nao encontrado.", "error");
+      setCepStatus("CEP não encontrado.", "error");
       return;
     }
 
@@ -151,7 +183,7 @@ const fetchAddressByCep = async (cep) => {
     }
 
     if (streetInput.value && neighborhoodInput.value) {
-      setCepStatus("Endereco encontrado.", "success");
+      setCepStatus("Endereço encontrado.", "success");
       return;
     }
 
@@ -161,7 +193,7 @@ const fetchAddressByCep = async (cep) => {
       return;
     }
 
-    setCepStatus("Nao foi possivel buscar o CEP. Preencha rua e bairro.", "error");
+    setCepStatus("Não foi possível buscar o CEP. Preencha rua e bairro.", "error");
   }
 };
 
@@ -188,11 +220,11 @@ const validateForm = () => {
   const quantityIsInvalid = data.quantidade && quantity < 1;
 
   const validations = [
-    [form.elements.cpf, cpfIsInvalid, "Informe um CPF valido."],
-    [form.elements.cep, cepIsInvalid, "Informe um CEP valido."],
-    [form.elements.telefone, phoneIsInvalid, "Informe um telefone valido."],
-    [form.elements.idade, ageIsInvalid, "Informe uma idade valida."],
-    [form.elements.quantidade, quantityIsInvalid, "Informe uma quantidade valida."],
+    [form.elements.cpf, cpfIsInvalid, "Informe um CPF válido."],
+    [form.elements.cep, cepIsInvalid, "Informe um CEP válido."],
+    [form.elements.telefone, phoneIsInvalid, "Informe um telefone válido."],
+    [form.elements.idade, ageIsInvalid, "Informe uma idade válida."],
+    [form.elements.quantidade, quantityIsInvalid, "Informe uma quantidade válida."],
   ];
 
   const failedValidation = validations.find(([, failed]) => failed);
@@ -205,7 +237,7 @@ const validateForm = () => {
 
   if (firstInvalidField) {
     firstInvalidField.focus();
-    return "Preencha todos os campos obrigatorios.";
+    return "Preencha todos os campos obrigatórios.";
   }
 
   if (failedValidation) {
@@ -217,22 +249,33 @@ const validateForm = () => {
   return "";
 };
 
-const buildOrderEmailPayload = (data) => ({
-  _subject: `Novo pedido - Docinhos da Ari - ${data.nome.trim()}`,
-  _template: "table",
-  _captcha: "false",
-  Nome: data.nome.trim(),
-  Idade: data.idade,
-  CPF: data.cpf,
-  Telefone: data.telefone,
-  CEP: data.cep,
-  Rua: data.rua.trim(),
-  Bairro: data.bairro.trim(),
-  Numero: data.numero.trim(),
-  Complemento: data.complemento.trim() || "Nao informado",
-  Sabor: data.sabores.trim(),
-  Quantidade: data.quantidade,
-});
+const buildOrderEmailPayload = (data) => {
+  const quantity = Number(data.quantidade);
+  const flavor = data.sabores.trim();
+  const total = getOrderTotal(quantity);
+
+  return {
+    _subject: `Novo pedido - Docinhos da Ari - ${data.nome.trim()}`,
+    _template: "table",
+    _captcha: "false",
+    "Idioma": "Português do Brasil",
+    "Nome completo": data.nome.trim(),
+    "Idade": data.idade,
+    "CPF": data.cpf,
+    "Telefone": data.telefone,
+    "CEP": data.cep,
+    "Rua": data.rua.trim(),
+    "Bairro": data.bairro.trim(),
+    "Número": data.numero.trim(),
+    "Complemento": data.complemento.trim() || "Não informado",
+    "Sabor": getFlavorPriceLabel(flavor),
+    "Quantidade": data.quantidade,
+    "Preço unitário": formatCurrency(flavorUnitPrice),
+    "Valor total": formatCurrency(total),
+    "Imagem do site": buildSiteImageHtml(),
+    "Link da imagem do site": siteImageUrl,
+  };
+};
 
 const sendOrderEmail = async (data) => {
   const response = await fetch(orderEmailEndpoint, {
@@ -245,7 +288,7 @@ const sendOrderEmail = async (data) => {
   });
 
   if (!response.ok) {
-    throw new Error("Nao foi possivel enviar o pedido por email.");
+    throw new Error("Não foi possível enviar o pedido por e-mail.");
   }
 };
 
@@ -304,6 +347,20 @@ images.forEach((image) => {
   }
 });
 
+closeSuccessButton.addEventListener("click", hideSuccessPopup);
+
+successModal.addEventListener("click", (event) => {
+  if (event.target === successModal) {
+    hideSuccessPopup();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !successModal.hidden) {
+    hideSuccessPopup();
+  }
+});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -322,25 +379,27 @@ form.addEventListener("submit", async (event) => {
   const firstName = data.nome.trim().split(/\s+/)[0];
   const quantity = Number(data.quantidade);
   const itemLabel = quantity === 1 ? "unidade" : "unidades";
+  const flavor = data.sabores.trim();
+  const total = getOrderTotal(quantity);
 
   setSubmitState(true);
-  setMessage("Enviando pedido por email...", "info");
+  setMessage("Enviando pedido por e-mail...", "info");
 
   try {
     await sendOrderEmail(data);
 
     setMessage(
-      `Pedido enviado com sucesso, ${firstName}! ${quantity} ${itemLabel} de ${data.sabores.trim()}.`,
+      `Pedido enviado com sucesso, ${firstName}! ${quantity} ${itemLabel} de ${flavor}. Valor total: ${formatCurrency(total)}.`,
       "success",
     );
 
     form.reset();
     resetFieldErrors();
     setCepStatus("");
-    form.querySelector("#nome").focus();
+    showSuccessPopup({ firstName, quantity, itemLabel, flavor, total });
   } catch (error) {
     setMessage(
-      "Nao foi possivel enviar o pedido por email. Verifique sua conexao e tente novamente.",
+      "Não foi possível enviar o pedido por e-mail. Verifique sua conexão e tente novamente.",
       "error",
     );
   } finally {
