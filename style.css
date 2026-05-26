@@ -226,6 +226,16 @@ select[aria-invalid="true"] {
   background: var(--color-primary-dark);
 }
 
+.submit-button:disabled {
+  background: var(--color-muted);
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.submit-button:disabled:hover {
+  background: var(--color-muted);
+}
+
 .submit-button:active {
   transform: translateY(1px);
 }
@@ -244,6 +254,10 @@ select[aria-invalid="true"] {
 
 .form-message.is-success {
   color: var(--color-success);
+}
+
+.form-message.is-info {
+  color: var(--color-muted);
 }
 
 .form-message.is-error {
