@@ -70,6 +70,7 @@
               autocomplete="off"
               inputmode="numeric"
               placeholder="000.000.000-00"
+              pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
               maxlength="14"
               required
             >
@@ -89,26 +90,83 @@
             >
           </div>
 
-          <div class="field field-full">
-            <label for="endereco">Endereco de entrega</label>
+          <div class="field">
+            <label for="cep">CEP</label>
             <input
               type="text"
-              id="endereco"
-              name="endereco"
-              autocomplete="street-address"
+              id="cep"
+              name="cep"
+              autocomplete="postal-code"
+              inputmode="numeric"
+              placeholder="00000-000"
+              maxlength="9"
+              required
+            >
+            <span class="field-help" id="cepStatus" role="status" aria-live="polite"></span>
+          </div>
+
+          <div class="field field-full">
+            <label for="rua">Rua</label>
+            <input
+              type="text"
+              id="rua"
+              name="rua"
+              autocomplete="address-line1"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="bairro">Bairro</label>
+            <input
+              type="text"
+              id="bairro"
+              name="bairro"
+              autocomplete="address-level3"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="numero">Numero da casa</label>
+            <input
+              type="text"
+              id="numero"
+              name="numero"
+              autocomplete="address-line2"
               required
             >
           </div>
 
           <div class="field field-full">
-            <label for="sabores">Sabores desejados</label>
+            <label for="complemento">Complemento</label>
             <input
               type="text"
+              id="complemento"
+              name="complemento"
+              autocomplete="address-line3"
+              placeholder="Apartamento, bloco ou referencia"
+            >
+          </div>
+
+          <div class="field field-full">
+            <label for="sabores">Sabores desejados</label>
+            <select
               id="sabores"
               name="sabores"
-              placeholder="Ex: chocolate, morango e ninho"
               required
             >
+              <option value="">Selecione um sabor</option>
+              <option value="Brigadeiro">Brigadeiro</option>
+              <option value="Beijinho">Beijinho</option>
+              <option value="Casadinho">Casadinho</option>
+              <option value="Chocolate">Chocolate</option>
+              <option value="Coco">Coco</option>
+              <option value="Morango">Morango</option>
+              <option value="Ninho">Ninho</option>
+              <option value="Ninho com Nutella">Ninho com Nutella</option>
+              <option value="Sortido">Sortido</option>
+            </select>
           </div>
 
           <div class="field">
