@@ -8,8 +8,8 @@
     content="Formulário de pedidos da Docinhos da Ari."
   >
   <title>Docinhos da Ari | Pedido</title>
-  <link rel="icon" type="image/jpeg" href="assets/docinho-logo.jpg">
-  <link rel="apple-touch-icon" href="assets/docinho-logo.jpg">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
 </head>
@@ -18,7 +18,7 @@
     <section class="order-panel" aria-labelledby="titulo-pedido">
       <header class="brand-header">
         <div class="brand-logo-frame" aria-label="Docinhos da Ari">
-          <img class="brand-logo" src="assets/docinho-logo.jpg" alt="">
+          <img class="brand-logo" src="assets/docinho-logo.png" alt="">
           <span class="brand-logo-fallback" aria-hidden="true">DA</span>
         </div>
         <div class="brand-photo-frame">
@@ -200,6 +200,33 @@
       </form>
     </section>
   </main>
+
+  <div class="payment-modal" id="pagamentoPix" role="dialog" aria-modal="true" aria-labelledby="pagamentoTitulo" hidden>
+    <div class="payment-modal__content">
+      <p class="payment-modal__eyebrow">Pagamento Pix</p>
+      <h2 id="pagamentoTitulo">Finalize o pagamento para confirmar o pedido</h2>
+      <p id="pagamentoResumo"></p>
+
+      <div class="pix-box">
+        <span class="pix-box__label">Chave Pix</span>
+        <div class="pix-copy-row">
+          <input
+            class="pix-copy-row__input"
+            id="pixChave"
+            type="text"
+            value="119806571119"
+            aria-label="Chave Pix"
+            readonly
+          >
+          <button class="payment-modal__secondary-button" id="copiarPix" type="button">Copiar chave</button>
+        </div>
+        <p class="payment-modal__status" id="pagamentoStatus" role="status" aria-live="polite"></p>
+      </div>
+
+      <button class="payment-modal__button" id="confirmarPagamento" type="button">Já fiz o pagamento</button>
+      <button class="payment-modal__ghost-button" id="alterarPedido" type="button">Voltar e alterar pedido</button>
+    </div>
+  </div>
 
   <div class="success-modal" id="sucessoPedido" role="dialog" aria-modal="true" aria-labelledby="sucessoTitulo" hidden>
     <div class="success-modal__content">

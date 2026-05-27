@@ -7,13 +7,21 @@ const neighborhoodInput = document.querySelector("#bairro");
 const cepStatus = document.querySelector("#cepStatus");
 const phoneInput = document.querySelector("#telefone");
 const submitButton = form.querySelector(".submit-button");
+const paymentModal = document.querySelector("#pagamentoPix");
+const paymentSummary = document.querySelector("#pagamentoResumo");
+const paymentStatus = document.querySelector("#pagamentoStatus");
+const pixKeyInput = document.querySelector("#pixChave");
+const copyPixButton = document.querySelector("#copiarPix");
+const confirmPaymentButton = document.querySelector("#confirmarPagamento");
+const editOrderButton = document.querySelector("#alterarPedido");
 const successModal = document.querySelector("#sucessoPedido");
 const successSummary = document.querySelector("#sucessoResumo");
 const closeSuccessButton = document.querySelector("#fecharSucesso");
 const images = document.querySelectorAll("img");
 const orderEmail = "vinicios3007@gmail.com";
 const orderEmailEndpoint = `https://formsubmit.co/ajax/${orderEmail}`;
-const submitButtonText = submitButton.textContent;
+const confirmPaymentButtonText = confirmPaymentButton.textContent;
+const pixKey = "119806571119";
 const flavorUnitPrice = 6;
 const siteImageUrl = new URL("assets/docinhos-sortidos.jpg", window.location.href).href;
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -21,6 +29,7 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 let cepRequestId = 0;
+let pendingOrder = null;
 
 const onlyDigits = (value) => value.replace(/\D/g, "");
 
@@ -97,9 +106,16 @@ const clearMessage = () => {
   message.className = "form-message";
 };
 
-const setSubmitState = (isSubmitting) => {
-  submitButton.disabled = isSubmitting;
-  submitButton.textContent = isSubmitting ? "Enviando pedido..." : submitButtonText;
+const setPaymentStatus = (text, type = "") => {
+  paymentStatus.textContent = text;
+  paymentStatus.className = type ? `payment-modal__status is-${type}` : "payment-modal__status";
+};
+
+const setPaymentSubmitState = (isSubmitting) => {
+  confirmPaymentButton.disabled = isSubmitting;
+  copyPixButton.disabled = isSubmitting;
+  editOrderButton.disabled = isSubmitting;
+  confirmPaymentButton.textContent = isSubmitting ? "Enviando aviso..." : confirmPaymentButtonText;
 };
 
 const setCepStatus = (text, type = "") => {
@@ -131,6 +147,24 @@ const getFlavorPriceLabel = (flavor) => `${flavor} - ${formatCurrency(flavorUnit
 const buildSiteImageHtml = () => (
   `<img src="${siteImageUrl}" alt="Docinhos da Ari" width="600" style="max-width:100%;height:auto;border-radius:8px;">`
 );
+
+const showPaymentPopup = (order) => {
+  pendingOrder = order;
+  pixKeyInput.value = pixKey;
+  paymentSummary.textContent = `${order.firstName}, pague ${formatCurrency(order.total)} no Pix para finalizar o pedido de ${order.quantity} ${order.itemLabel} de ${order.flavor}. Depois confirme abaixo para enviarmos o aviso por e-mail.`;
+  setPaymentStatus("Copie a chave Pix e cole no aplicativo do seu banco.");
+  paymentModal.hidden = false;
+  document.body.classList.add("has-open-modal");
+  copyPixButton.focus();
+};
+
+const hidePaymentPopup = () => {
+  paymentModal.hidden = true;
+  document.body.classList.remove("has-open-modal");
+  setPaymentStatus("");
+  pendingOrder = null;
+  submitButton.focus();
+};
 
 const showSuccessPopup = ({ firstName, quantity, itemLabel, flavor, total }) => {
   successSummary.textContent = `${firstName}, recebemos seu pedido de ${quantity} ${itemLabel} de ${flavor}. Valor total: ${formatCurrency(total)}.`;
@@ -255,7 +289,7 @@ const buildOrderEmailPayload = (data) => {
   const total = getOrderTotal(quantity);
 
   return {
-    _subject: `Novo pedido - Docinhos da Ari - ${data.nome.trim()}`,
+    _subject: `Novo pedido com Pix para conferir - Docinhos da Ari - ${data.nome.trim()}`,
     _template: "table",
     _captcha: "false",
     "Idioma": "Português do Brasil",
@@ -272,6 +306,9 @@ const buildOrderEmailPayload = (data) => {
     "Quantidade": data.quantidade,
     "Preço unitário": formatCurrency(flavorUnitPrice),
     "Valor total": formatCurrency(total),
+    "Forma de pagamento": "Pix",
+    "Chave Pix apresentada": pixKey,
+    "Status do pagamento": "Cliente informou que realizou o Pix. Confira no banco antes de confirmar o pedido.",
     "Imagem do site": buildSiteImageHtml(),
     "Link da imagem do site": siteImageUrl,
   };
@@ -347,6 +384,78 @@ images.forEach((image) => {
   }
 });
 
+const copyPixKey = async () => {
+  const key = pixKeyInput.value;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(key);
+    } else {
+      pixKeyInput.focus();
+      pixKeyInput.select();
+
+      if (!document.execCommand("copy")) {
+        throw new Error("Clipboard fallback failed");
+      }
+    }
+
+    setPaymentStatus("Chave Pix copiada.", "success");
+  } catch (error) {
+    pixKeyInput.focus();
+    pixKeyInput.select();
+    setPaymentStatus("Não foi possível copiar automaticamente. Selecione a chave e copie.", "error");
+  }
+};
+
+const confirmPayment = async () => {
+  if (!pendingOrder) {
+    return;
+  }
+
+  setPaymentSubmitState(true);
+  setPaymentStatus("Enviando pedido e aviso de pagamento para conferência...");
+  setMessage("Enviando pedido e aviso de pagamento por e-mail...", "info");
+
+  try {
+    await sendOrderEmail(pendingOrder.data);
+
+    const completedOrder = pendingOrder;
+    pendingOrder = null;
+    paymentModal.hidden = true;
+
+    setMessage(
+      `Pedido enviado com sucesso, ${completedOrder.firstName}! ${completedOrder.quantity} ${completedOrder.itemLabel} de ${completedOrder.flavor}. Valor total: ${formatCurrency(completedOrder.total)}.`,
+      "success",
+    );
+
+    form.reset();
+    resetFieldErrors();
+    setCepStatus("");
+    showSuccessPopup(completedOrder);
+  } catch (error) {
+    setPaymentStatus(
+      "Não foi possível enviar o e-mail de conferência. Verifique sua conexão e tente novamente.",
+      "error",
+    );
+    setMessage(
+      "Não foi possível enviar o pedido por e-mail. Verifique sua conexão e tente novamente.",
+      "error",
+    );
+  } finally {
+    setPaymentSubmitState(false);
+  }
+};
+
+copyPixButton.addEventListener("click", copyPixKey);
+confirmPaymentButton.addEventListener("click", confirmPayment);
+editOrderButton.addEventListener("click", hidePaymentPopup);
+
+paymentModal.addEventListener("click", (event) => {
+  if (event.target === paymentModal) {
+    hidePaymentPopup();
+  }
+});
+
 closeSuccessButton.addEventListener("click", hideSuccessPopup);
 
 successModal.addEventListener("click", (event) => {
@@ -356,12 +465,17 @@ successModal.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !paymentModal.hidden) {
+    hidePaymentPopup();
+    return;
+  }
+
   if (event.key === "Escape" && !successModal.hidden) {
     hideSuccessPopup();
   }
 });
 
-form.addEventListener("submit", async (event) => {
+form.addEventListener("submit", (event) => {
   event.preventDefault();
 
   if (submitButton.disabled) {
@@ -382,27 +496,6 @@ form.addEventListener("submit", async (event) => {
   const flavor = data.sabores.trim();
   const total = getOrderTotal(quantity);
 
-  setSubmitState(true);
-  setMessage("Enviando pedido por e-mail...", "info");
-
-  try {
-    await sendOrderEmail(data);
-
-    setMessage(
-      `Pedido enviado com sucesso, ${firstName}! ${quantity} ${itemLabel} de ${flavor}. Valor total: ${formatCurrency(total)}.`,
-      "success",
-    );
-
-    form.reset();
-    resetFieldErrors();
-    setCepStatus("");
-    showSuccessPopup({ firstName, quantity, itemLabel, flavor, total });
-  } catch (error) {
-    setMessage(
-      "Não foi possível enviar o pedido por e-mail. Verifique sua conexão e tente novamente.",
-      "error",
-    );
-  } finally {
-    setSubmitState(false);
-  }
+  clearMessage();
+  showPaymentPopup({ data, firstName, quantity, itemLabel, flavor, total });
 });
